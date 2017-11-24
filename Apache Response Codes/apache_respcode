@@ -1,0 +1,29 @@
+#!/bin/bash
+
+DATE=$(date +%d/%b/%Y:%H:%M -d  "1 minute ago")
+LOGFILE=/var/log/httpd/access_log
+
+if [ -z $1 ]; then
+	#RESPCODES=`awk '{print $10}' $LOGFILE | sort | uniq`
+	RESPCODES=(200 301 302 403 404 410 500 503)
+
+	pos=$(( ${#RESPCODES[*]} - 1 ))
+	last=${RESPCODES[$pos]}
+
+	echo "{"
+	echo "\"data\":["
+	for respcode in "${RESPCODES[@]}"
+	do
+			if [[ $respcode == $last ]]
+			then
+				echo "    {\"{#RESPCODE}\":\"$respcode\"}"
+			else
+				echo "    {\"{#RESPCODE}\":\"$respcode\"},"
+			fi
+	done
+	echo "]"
+	echo "}"
+else
+	ERR=$(grep -A99999999999999999  $DATE $LOGFILE | grep "POST\|GET" | cut -f3 -d'"' | awk '{print$1}'| grep $1 |wc -l)
+	echo $ERR
+fi
